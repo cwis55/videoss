@@ -26,7 +26,11 @@ body { background: #222; font-family: 'Pretendard', sans-serif; color: var(--cho
 .card { width: 1080px; height: 1350px; position: relative; overflow: hidden; background: var(--choco);
   word-break: keep-all; }
 .bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.bg svg { width: 100%; height: 100%; display: block; }
+.bg svg, .bg video { width: 100%; height: 100%; display: block; object-fit: cover; }
+/* 영상 합성용: 배경을 비우고 글자·장식만 남김 */
+.overlay-only .bg { display: none; }
+.overlay-only { background: transparent !important; }
+body:has(.overlay-only) { background: transparent; }
 .shade { position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(43,22,8,.55) 0%, rgba(43,22,8,0) 18%, rgba(43,22,8,0) 45%, rgba(43,22,8,.92) 82%, rgba(43,22,8,.98) 100%); }
 
@@ -117,10 +121,12 @@ body { background: #222; font-family: 'Pretendard', sans-serif; color: var(--cho
          'scene:숫자' 는 샘플용 배경(0~3)입니다.
    - *별표* 로 감싼 글자는 노란색 강조가 됩니다.
    - \n 은 줄바꿈입니다.
+   - video: 'posts/.../clip.mp4' 를 넣으면 영상 슬라이드(mp4)도 함께 만들어집니다.
+   - 게시물별 내용은 posts/<이름>/content.js 에 두고 template.html?post=<이름> 으로 엽니다.
    =================================================================== */
 const BRAND = { name: '생생', handle: '@saeng_mag', bio: '말랑하게 씹어먹는 게임 소식' };
 
-const CARDS = [
+let CARDS = [
   { type: 'cover', bg: 'scene:0',
     eyebrow: '🔥 이번 주 스팀 신작',
     headline: '슬라임 키우다가\n*하루 순삭* 각',
@@ -179,24 +185,27 @@ function scene(i) {
   ${slime(260, 800, 70, '#FFC61E')}${slime(470, 860, 46, '#FF8A00')}${slime(760, 780, 58, '#7FE0C2')}${slime(900, 900, 40, '#FF8FB1')}${slime(140, 960, 36, '#B39BFF')}
   <text x="540" y="560" text-anchor="middle" font-family="Pretendard" font-weight="700" font-size="30" fill="#2B1608" opacity=".35">샘플 배경 · 게임 스크린샷으로 교체</text></svg>`;
 }
-const bg = v => v && v.startsWith('scene:') ? `<div class="bg">${scene(+v.slice(6))}</div>` : `<div class="bg" style="background-image:url('${v}')"></div>`;
+const RENDER = new URLSearchParams(location.search).has('render');
+const bg = (v, video) => video && !RENDER ? `<div class="bg"><video src="${video}" poster="${v || ''}" muted autoplay loop playsinline></video></div>`
+  : v && v.startsWith('scene:') ? `<div class="bg">${scene(+v.slice(6))}</div>` : `<div class="bg" style="background-image:url('${v}')"></div>`;
 
+function build() {
 const total = CARDS.length;
 const pad = n => String(n).padStart(2, '0');
 const topBar = n => `<div class="top"><div class="brand"><img src="assets/profile.png"><b>${BRAND.name}</b></div><div class="page"><i>${pad(n)}</i> / ${pad(total)}</div></div>`;
 const foot = (n, label = '넘겨보기 →') => `<div class="foot"><span class="handle">${BRAND.handle}</span>${n < total ? `<span class="next">${label}</span>` : ''}</div>`;
 
 const R = {
-  cover: (c, n) => `${bg(c.bg)}<div class="shade"></div>${topBar(n)}
+  cover: (c, n) => `${bg(c.bg, c.video)}<div class="shade"></div>${topBar(n)}
     <div class="copy"><span class="eyebrow">${esc(c.eyebrow)}</span><h1 class="headline">${rich(c.headline)}</h1></div>
     <div class="bubble">${esc(c.bubble)}</div><img class="sticker" src="assets/mascot.png">
     <div class="foot"><span class="handle">${BRAND.handle}</span></div>`,
-  game: (c, n) => `${bg(c.bg)}<div class="shade"></div>${topBar(n)}
-    <div class="panel"><div class="num">${c.no}</div><h2 class="title">${rich(c.title)}</h2>
+  game: (c, n) => `${bg(c.bg, c.video)}<div class="shade"></div>${topBar(n)}
+    <div class="panel">${c.no ? `<div class="num">${c.no}</div>` : ''}<h2 class="title">${rich(c.title)}</h2>
       <div class="chips">${c.chips.map(t => `<span class="chip">${esc(t)}</span>`).join('')}${c.ok ? `<span class="chip ok">✓ ${esc(c.ok)}</span>` : ''}</div>
-      <div class="price"><s>${c.price.orig}</s><strong>${c.price.sale}</strong><span class="off">${c.price.off}</span></div>
+      <div class="price">${c.price.orig ? `<s>${c.price.orig}</s>` : ''}<strong>${c.price.sale}</strong>${c.price.off ? `<span class="off">${c.price.off}</span>` : ''}</div>
       <p class="desc">${rich(c.desc)}</p></div>${foot(n)}`,
-  point: (c, n) => `${bg(c.bg)}<div class="shade"></div>${topBar(n)}
+  point: (c, n) => `${bg(c.bg, c.video)}<div class="shade"></div>${topBar(n)}
     <div class="copy"><span class="eyebrow">${esc(c.eyebrow)}</span><h2 class="headline">${rich(c.headline)}</h2><p class="body">${rich(c.body)}</p></div>${foot(n)}`,
   check: (c, n) => `<div class="dots"></div>${topBar(n)}
     <div class="check-wrap"><span class="eyebrow">${esc(c.eyebrow)}</span><h2 class="headline">${rich(c.headline)}</h2>
@@ -211,7 +220,17 @@ const R = {
 };
 const CLASS = { cover: 'cover', game: 'game', point: 'point', check: 'yellow', cta: 'yellow cta' };
 document.body.insertAdjacentHTML('beforeend', CARDS.map((c, i) =>
-  `<section class="card ${CLASS[c.type]}">${R[c.type](c, i + 1)}</section>`).join(''));
+  `<section class="card ${CLASS[c.type]}"${c.video ? ` data-video="${c.video}"` : ''}>${R[c.type](c, i + 1)}</section>`).join(''));
+}
+
+const post = new URLSearchParams(location.search).get('post');
+if (post) {
+  const js = document.createElement('script');
+  js.src = `posts/${post}/content.js`;
+  js.onload = build;
+  js.onerror = () => { throw new Error(`posts/${post}/content.js 를 찾지 못했어요.`); };
+  document.body.append(js);
+} else build();
 </script>
 </body>
 </html>

@@ -4,17 +4,20 @@
 
 ## 사용법
 
-1. 게임 스크린샷을 `images/` 폴더에 넣습니다.
-2. `template.html` 맨 위의 `CARDS` 내용을 수정합니다.
-   - `bg: 'images/파일.jpg'`: 배경 스크린샷 (`scene:0~3`은 샘플 배경)
+게시물마다 `posts/<이름>/` 폴더를 만들어 씁니다. 예: `posts/catmail/`
+
+1. `posts/<이름>/images/`에 스크린샷, `clips/`에 영상(1080×1350으로 자른 mp4)을 넣습니다.
+2. `posts/<이름>/content.js`에 `CARDS`를 씁니다. 형식은 `posts/catmail/content.js` 참고.
+   - `bg`: 배경 이미지, `video`: 영상 슬라이드로 만들 클립 (이 경우 `bg`는 정지 이미지용)
    - `*글자*`: 노란색 강조, `\n`: 줄바꿈
-   - 카드는 넣고 빼도 페이지 번호(01 / 06)가 자동으로 맞춰집니다.
-3. PNG로 내보냅니다.
+   - `price`: `{ sale }`만 쓰면 정가, `orig`·`off`를 넣으면 할인 표시
+   - 카드를 넣고 빼도 페이지 번호(01 / 09)가 자동으로 맞춰집니다.
+3. 내보내기
    ```bash
-   npm i playwright        # 처음 한 번
-   node render.mjs         # out/01.png, 02.png ... 생성
+   npm i playwright          # 처음 한 번 (ffmpeg도 필요)
+   node render.mjs catmail   # posts/catmail/out/에 01.png ... 생성, 영상 카드는 01.mp4도 생성
    ```
-   브라우저에서 `template.html`을 열어 캡처해도 됩니다.
+   브라우저에서 `template.html?post=catmail`을 열면 영상까지 움직이는 미리보기를 볼 수 있습니다.
 
 ## 카드 종류
 
