@@ -4,7 +4,7 @@ const P = 'posts/lightup/';
 CARDS = [
   { type: 'cover', bg: P + 'images/cover_poster.jpg', video: P + 'clips/cover.mp4',
     eyebrow: '🎄 크리스마스 꾸미기 게임',
-    headline: '클릭 한 번에\n*마을이 반짝*',
+    headline: '크리스마스 분위기\n*제대로*인 게임',
     bubble: '넘겨봐!' },
 
   { type: 'game', bg: P + 'images/s11.jpg',

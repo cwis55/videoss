@@ -21,7 +21,10 @@ const v = { ...JSON.parse(readFileSync(`${root}/voice.json`, 'utf8')), ...ctx.RE
 const voiceId = v.id ?? process.env.ELEVENLABS_VOICE_ID;
 if (!voiceId) throw new Error('reel.js의 voice.id 나 ELEVENLABS_VOICE_ID 가 필요해요.');
 
+// 세 번째 인자로 장면 번호를 주면 그 장면만 다시 뽑음. 예: node tts.mjs lightup 1,2
+const only = process.argv[3]?.split(',').map(Number);
 for (const [i, s] of ctx.REEL.scenes.entries()) {
+  if (only && !only.includes(i + 1)) continue;
   const text = (s.say ?? s.sub ?? '').replace(/\*/g, '').replace(/\n/g, ' ').trim();
   if (!text) continue;
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {

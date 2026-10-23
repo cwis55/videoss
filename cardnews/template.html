@@ -221,6 +221,13 @@ const R = {
 const CLASS = { cover: 'cover', game: 'game', point: 'point', check: 'yellow', cta: 'yellow cta' };
 document.body.insertAdjacentHTML('beforeend', CARDS.map((c, i) =>
   `<section class="card ${CLASS[c.type]}"${c.video ? ` data-video="${c.video}"` : ''}>${R[c.type](c, i + 1)}</section>`).join(''));
+  // 제목이 칸보다 길어 줄이 넘치면 글자 크기를 줄여서 적어 둔 줄 수(\n)에 맞춤
+  document.fonts.ready.then(() => document.querySelectorAll('.headline, .title').forEach(h => {
+    const lines = h.querySelectorAll('br').length + 1;
+    let size = parseFloat(getComputedStyle(h).fontSize);
+    const lh = () => parseFloat(getComputedStyle(h).lineHeight);
+    while (h.getBoundingClientRect().height > lines * lh() + 4 && size > 40) h.style.fontSize = `${size -= 3}px`;
+  }));
 }
 
 const post = new URLSearchParams(location.search).get('post');

@@ -5,15 +5,15 @@ REEL = {
   scenes: [
     { type: 'hook', clip: C + 'hook.mp4', dur: 3,
       eyebrow: '🎄 크리스마스 꾸미기 게임',
-      headline: '클릭 한 번에\n*마을이 반짝*',
+      headline: '크리스마스 분위기\n*제대로*인 게임',
       bubble: '끝까지 봐!',
-      sub: '클릭만 하면 마을에 *불이 켜진다*고?' },
+      sub: '크리스마스 분위기 *제대로*인\n게임이 있어요' },
 
     { type: 'info', clip: C + 'info.mp4', dur: 3,
       headline: 'Light Up\n*The Town*',
       chips: ['체험판 무료', '한국어 미지원'],
       price: { sale: '16,500원' },
-      say: '이름은, 라이트업 더 타운! 가격은 만 육천오백 원, 체험판은 무료예요!' },
+      say: '이름은, 라이트 업 타운! 가격은 만 육천오백 원, 체험판은 무료예요!' },
 
     { type: 'point', clip: C + 'throw.mp4', dur: 3,
       eyebrow: 'POINT 1 · 휙휙',

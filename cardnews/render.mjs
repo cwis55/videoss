@@ -25,6 +25,7 @@ await page.waitForSelector('.card', { timeout: 10000 }).catch(() => {
   throw new Error('카드를 찾지 못했어요. CARDS 내용을 확인하세요.');
 });
 await page.evaluate(() => document.fonts.ready);
+await page.waitForTimeout(100);   // 제목 글자 크기 자동 맞춤이 끝나도록
 // 배경 이미지까지 다 불러온 뒤 캡처
 await page.evaluate(() => Promise.all([...document.querySelectorAll('.bg')].map(el => {
   const m = getComputedStyle(el).backgroundImage.match(/url\("(.+)"\)/);
