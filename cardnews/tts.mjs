@@ -33,6 +33,7 @@ for (const [i, s] of ctx.REEL.scenes.entries()) {
     body: JSON.stringify({
       text,
       model_id: v.model ?? 'eleven_v4',
+      language_code: v.language ?? 'ko',   // 한국어 모드: 영어 이름도 한국어 발음으로
       voice_settings: { stability: v.stability ?? 0.5, similarity_boost: v.similarity ?? 0.75, ...(v.style != null && { style: v.style }) },
     }),
   });

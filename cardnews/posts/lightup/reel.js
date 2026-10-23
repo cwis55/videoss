@@ -13,7 +13,7 @@ REEL = {
       headline: 'Light Up\n*The Town*',
       chips: ['체험판 무료', '한국어 미지원'],
       price: { sale: '16,500원' },
-      say: '이름은, 라이트 업 타운! 가격은 만 육천오백 원, 체험판은 무료예요!' },
+      say: '게임 이름은 라이트업타운! 가격은 만 육천오백 원, 체험판은 무료예요!' },
 
     { type: 'point', clip: C + 'throw.mp4', dur: 3,
       eyebrow: 'POINT 1 · 휙휙',
