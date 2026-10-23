@@ -2,7 +2,7 @@
 // 사용법: node reel.mjs catmail   → posts/catmail/reel/out/reel.mp4
 // posts/<이름>/reel/voice/01.mp3 ... 가 있으면 장면 길이를 음성에 맞추고 음성을 넣습니다 (tts.mjs로 생성).
 import { chromium } from 'playwright';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -34,7 +34,9 @@ page.on('pageerror', e => { console.error('템플릿 오류:', e.message); proce
 await page.goto(url.href);
 await page.waitForSelector('.scene');
 await page.evaluate(() => document.fonts.ready);
-const { scenes, voice: VOICE = {} } = await page.evaluate(() => REEL);
+const reel = await page.evaluate(() => REEL);
+const scenes = reel.scenes;
+const VOICE = { ...JSON.parse(readFileSync(`${root}/voice.json`, 'utf8')), ...reel.voice };
 // 음성 가공: 피치를 올리고(asetrate) 말 속도를 조절(atempo) → 길이는 pitch*speed 배로 줄어듦
 const PITCH = VOICE.pitch ?? 1, SPEED = VOICE.speed ?? 1;
 const voiceFx = `asetrate=44100*${PITCH},aresample=44100,atempo=${SPEED}`;

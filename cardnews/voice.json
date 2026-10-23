@@ -1,0 +1,9 @@
+{
+  "_설명": "생생 릴스 기본 목소리. 게시물 reel.js의 voice에 적은 값만 이걸 덮어씁니다.",
+  "id": "aQ59Cs9Kd2zyFv9M0I6Z",
+  "model": "eleven_v4",
+  "stability": 0.5,
+  "similarity": 0.75,
+  "pitch": 1,
+  "speed": 1.12
+}

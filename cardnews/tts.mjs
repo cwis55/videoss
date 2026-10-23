@@ -1,5 +1,5 @@
 // ElevenLabs로 릴스 장면별 음성을 만듭니다.
-// 사용법: node tts.mjs catmail   (목소리는 reel.js의 voice.id)
+// 사용법: NODE_USE_ENV_PROXY=1 node tts.mjs catmail   (목소리는 voice.json, 게시물 reel.js의 voice로 덮어쓰기 가능)
 //  (키는 환경의 Network secrets로 자동으로 붙음. 직접 넣으려면 ELEVENLABS_API_KEY)
 //  → posts/catmail/reel/voice/01.mp3 ... 생성 후 node reel.mjs catmail 하면 음성 길이에 맞춰 릴스가 만들어집니다.
 // 장면의 say(없으면 sub)를 읽습니다. 둘 다 없는 장면은 음성 없이 dur 길이로 나옵니다.
@@ -17,7 +17,7 @@ const ctx = {};
 vm.runInNewContext(readFileSync(`${root}/posts/${post}/reel.js`, 'utf8'), ctx);
 const out = `${root}/posts/${post}/reel/voice`;
 mkdirSync(out, { recursive: true });
-const v = ctx.REEL.voice ?? {};
+const v = { ...JSON.parse(readFileSync(`${root}/voice.json`, 'utf8')), ...ctx.REEL.voice };
 const voiceId = v.id ?? process.env.ELEVENLABS_VOICE_ID;
 if (!voiceId) throw new Error('reel.js의 voice.id 나 ELEVENLABS_VOICE_ID 가 필요해요.');
 

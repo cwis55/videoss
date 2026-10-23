@@ -5,9 +5,6 @@
 const C = 'posts/catmail/reel/clips/';
 
 REEL = {
-  // TTS 목소리 (ElevenLabs My Voices의 'You'), 사이트 설정과 동일: Eleven v4 / Stability 0.5 / Similarity 0.75
-  // pitch 피치 배율, speed 말 속도 배율 (1 = 원본)
-  voice: { id: 'aQ59Cs9Kd2zyFv9M0I6Z', model: 'eleven_v4', stability: 0.5, similarity: 0.75, pitch: 1, speed: 1.12 },
   scenes: [
     { type: 'hook', clip: C + 'hook.mp4', dur: 3.6,
       eyebrow: '📦 1~4인 힐링 협동 게임',
