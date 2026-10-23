@@ -19,7 +19,7 @@ const BAND = { y: 690, h: 608 };     // reel.html의 영상 자리와 같아야 
 const SUB_DELAY = 0.15;              // 자막 첫 줄이 튀어 오르기 시작하는 시점
 const LINE_GAP = 0.14;               // 다음 줄이 따라 오르는 간격
 
-const ff = args => execFileSync('ffmpeg', ['-v', 'error', '-y', ...args]);
+const ff = args => { if (process.env.DEBUG) console.log(['ffmpeg', ...args].map(a => JSON.stringify(a)).join(' ')); return execFileSync('ffmpeg', ['-v', 'error', '-y', ...args]); };
 const probe = f => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString();
 
 // 1) 장면별 글자 레이어를 투명 PNG로 뽑기
@@ -32,7 +32,10 @@ page.on('pageerror', e => { console.error('템플릿 오류:', e.message); proce
 await page.goto(url.href);
 await page.waitForSelector('.scene');
 await page.evaluate(() => document.fonts.ready);
-const scenes = await page.evaluate(() => REEL.scenes);
+const { scenes, voice: VOICE = {} } = await page.evaluate(() => REEL);
+// 음성 가공: 피치를 올리고(asetrate) 말 속도를 조절(atempo) → 길이는 pitch*speed 배로 줄어듦
+const PITCH = VOICE.pitch ?? 1, SPEED = VOICE.speed ?? 1;
+const voiceFx = `asetrate=44100*${PITCH},aresample=44100,atempo=${SPEED}`;
 const els = await page.$$('.scene');
 const layers = [];
 for (const [i, el] of els.entries()) {
@@ -69,7 +72,7 @@ for (const [i, s] of scenes.entries()) {
   if (!s.clip) throw new Error(`장면 ${n}: clip(영상)을 넣어주세요.`);
   const voice = `${dir}/voice/${n}.mp3`;
   const hasVoice = existsSync(voice);
-  const dur = (hasVoice ? probe(voice) + 0.35 : s.dur) + (end ? END_HOLD : 0);
+  const dur = (hasVoice ? probe(voice) / (PITCH * SPEED) + 0.45 : s.dur) + (end ? END_HOLD : 0);
   const out = `${tmp}/${n}.mp4`;
 
   // 배경: 같은 영상을 흐리게 깔고, 가운데에 원본 가로 영상
@@ -108,21 +111,22 @@ for (const [i, s] of scenes.entries()) {
     if (SFX.end) sfx.push(['end', fo + 0.3]);
   }
 
-  // 오디오: 음성(없으면 무음) + 효과음
-  if (hasVoice) inputs.push('-i', voice);
-  else inputs.push('-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo');
-  let amix = `[${idx}:a]aresample=44100,aformat=channel_layouts=stereo,apad[a0]`;
+  // 오디오: 음성(없으면 무음) + 효과음을 먼저 wav로 따로 만든 뒤 영상에 붙임
+  // (영상과 한 번에 합성하면 ffmpeg가 서로 기다리다 멈춤)
+  const ain = hasVoice ? ['-i', voice] : ['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo'];
+  let amix = `[0:a]aresample=44100,${hasVoice ? `${voiceFx},adelay=120|120,` : ''}aformat=channel_layouts=stereo,apad[a0]`;
   const aIn = ['[a0]'];
   for (const [k, [name, at]] of sfx.entries()) {
-    inputs.push('-i', SFX[name]);
+    ain.push('-i', SFX[name]);
     const ms = Math.round(at * 1000);
-    amix += `;[${idx + 1 + k}:a]aresample=44100,aformat=channel_layouts=stereo,adelay=${ms}|${ms},volume=${SFX_VOL[name]}[x${k}]`;
+    amix += `;[${1 + k}:a]aresample=44100,aformat=channel_layouts=stereo,adelay=${ms}|${ms},volume=${SFX_VOL[name]}[x${k}]`;
     aIn.push(`[x${k}]`);
   }
   amix += `;${aIn.join('')}amix=inputs=${aIn.length}:duration=first:normalize=0${end ? `,afade=out:st=${(dur - 0.6).toFixed(2)}:d=0.6` : ''}[aout]`;
-  fc += `;${amix}`;
+  ff([...ain, '-filter_complex', amix, '-map', '[aout]', '-t', dur.toFixed(3), '-ar', '44100', '-ac', '2', `${tmp}/${n}.wav`]);
 
-  ff([...inputs, '-filter_complex', fc, '-map', `[${last}]`, '-map', '[aout]', '-t', dur.toFixed(3),
+  inputs.push('-i', `${tmp}/${n}.wav`);
+  ff([...inputs, '-filter_complex', fc, '-map', `[${last}]`, '-map', `${idx}:a`, '-t', dur.toFixed(3),
     '-r', String(FPS), '-c:v', 'libx264', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '44100', '-ac', '2', out]);
   parts.push(out);
   console.log(`장면 ${n} (${s.type}) ${dur.toFixed(1)}초`);

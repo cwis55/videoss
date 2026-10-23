@@ -5,6 +5,8 @@
 const C = 'posts/catmail/reel/clips/';
 
 REEL = {
+  // TTS 목소리 (ElevenLabs JY - 밝은 브이로그 톤) + 귀엽게 가공: pitch 피치 배율, speed 말 속도 배율
+  voice: { id: 'bQlkYuipD5BHEhntA5iz', pitch: 1.07, speed: 1.06 },
   scenes: [
     { type: 'hook', clip: C + 'hook.mp4', dur: 3.6,
       eyebrow: '📦 1~4인 힐링 협동 게임',
@@ -31,7 +33,8 @@ REEL = {
     { type: 'point', clip: C + 'coop.mp4', dur: 3.2,
       eyebrow: 'POINT 3 · 협동',
       headline: '친구랑 하면\n*배송 라인 완성*…?',
-      sub: '최대 *4명*이서 같이 일할 수 있어요' },
+      sub: '최대 *4명*이서 같이 일할 수 있어요',
+      say: '최대 네 명이서 같이 일할 수 있어요!' },
 
     { type: 'point', clip: C + 'night.mp4', dur: 3.4,
       eyebrow: 'POINT 4 · 밤의 우체국',
