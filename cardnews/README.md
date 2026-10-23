@@ -34,3 +34,23 @@
 - 컬러: 젤리 노랑 `#FFC61E`, 주황 `#FF8A00`, 할인 `#F25C05`, 크림 `#FFF6DC`, 초코 `#2B1608`
 - 폰트: Pretendard(제목·본문), Jua(생생 이름·말풍선). 둘 다 무료 상업용(OFL) 폰트입니다.
 - 모든 장 공통: 왼쪽 위 생생 프로필, 오른쪽 위 페이지 번호, 아래 `@saeng_mag` 워터마크, "넘겨보기 →"
+
+## 릴스 템플릿
+
+카드뉴스와 같은 색·폰트·생생 프로필·마스코트를 쓰는 1080×1920 릴스입니다.
+
+- 화면 구성: 위쪽 제목 → 가운데 게임 영상(가로) + 흐린 배경 → 아래 자막. 인스타 UI가 덮는 위 150px, 아래 420px, 오른쪽 140px은 비워 둡니다.
+- 장면 종류: `hook`(첫 장면, 생생이 "끝까지 봐!"), `info`(이름·가격), `point`, `outro`(노란 화면, 팔로우, 카드뉴스 안내)
+- 자막은 줄마다 아래에서 통통 튀어 오릅니다.
+
+```bash
+node reel.mjs catmail      # posts/catmail/reel.js → posts/catmail/reel/out/reel.mp4
+```
+
+### TTS (ElevenLabs)
+
+```bash
+ELEVENLABS_API_KEY=... ELEVENLABS_VOICE_ID=... node tts.mjs catmail   # reel/voice/01.mp3 ...
+node reel.mjs catmail      # 음성이 있으면 장면 길이를 음성에 맞추고 음성을 넣음
+```
+장면의 `say`(없으면 `sub`)를 읽습니다. 음악은 들어가지 않으니 인스타에서 붙여 주세요.
