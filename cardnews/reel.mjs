@@ -45,38 +45,49 @@ for (const [i, el] of els.entries()) {
   const lines = pos.map((p, k) => ({ ...p, png: `${tmp}/${n}_sub${k}.png` }));
   for (const [k, line] of (await el.$$('.sub .line span')).entries())
     await line.screenshot({ path: lines[k].png, omitBackground: true });
-  await el.$$eval('.sub', subs => subs.forEach(e => { e.style.visibility = 'hidden'; }));
+  await el.$$eval('.sub, .endcard', es => es.forEach(e => { e.style.visibility = 'hidden'; }));
   await el.screenshot({ path: `${tmp}/${n}_base.png`, omitBackground: true });
-  layers.push({ n, lines });
+  // 엔드카드는 다른 요소를 다 숨기고 따로 캡처
+  const end = await el.$('.endcard');
+  if (end) {
+    await el.evaluate(e => [...e.children].forEach(c => { c.style.visibility = c.classList.contains('endcard') ? 'visible' : 'hidden'; }));
+    await el.screenshot({ path: `${tmp}/${n}_end.png`, omitBackground: true });
+  }
+  layers.push({ n, lines, end: !!end });
 }
 await browser.close();
+
+// 효과음 (assets/sfx/에 파일이 있을 때만): whoosh=장면 전환, pop=장면마다 자막 첫 줄, end=엔드카드
+const SFX_VOL = { whoosh: 0.4, pop: 0.35, end: 1.0 };
+const SFX = Object.fromEntries(['whoosh', 'pop', 'end'].map(k => [k, `${root}/assets/sfx/${k}.mp3`]).filter(([, f]) => existsSync(f)));
+const END_HOLD = 2.3;                // 엔드카드가 보이는 시간
 
 // 2) 장면별 영상 만들기
 const parts = [];
 for (const [i, s] of scenes.entries()) {
-  const { n, lines } = layers[i];
+  const { n, lines, end } = layers[i];
+  if (!s.clip) throw new Error(`장면 ${n}: clip(영상)을 넣어주세요.`);
   const voice = `${dir}/voice/${n}.mp3`;
   const hasVoice = existsSync(voice);
-  const dur = hasVoice ? probe(voice) + 0.35 : s.dur;
+  const dur = (hasVoice ? probe(voice) + 0.35 : s.dur) + (end ? END_HOLD : 0);
   const out = `${tmp}/${n}.mp4`;
 
-  const inputs = [];
-  let bg;
-  if (s.clip) {
-    inputs.push('-stream_loop', '-1', '-ss', String(s.clipStart ?? 0), '-i', resolve(root, s.clip));
-    bg = `[0:v]fps=${FPS},split[a][b];[a]scale=-2:${H},crop=${W}:${H},boxblur=30:2,eq=brightness=-0.18[back];[b]scale=${W}:${BAND.h}[front];[back][front]overlay=0:${BAND.y}[v0]`;
-  } else if (s.image) {
-    inputs.push('-loop', '1', '-i', resolve(root, s.image));
-    const frames = Math.ceil(dur * FPS);
-    bg = `[0:v]split[a][b];[a]scale=-2:${H},crop=${W}:${H},boxblur=30:2,eq=brightness=-0.18[back];` +
-      `[b]scale=3840:-2,zoompan=z='1+0.06*on/${frames}':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=${frames}:s=${W}x${BAND.h}:fps=${FPS}[front];[back][front]overlay=0:${BAND.y}[v0]`;
-  } else {
-    inputs.push('-f', 'lavfi', '-i', `color=c=0x2B1608:s=${W}x${H}:r=${FPS}`);
-    bg = '[0:v]null[v0]';
+  // 배경: 같은 영상을 흐리게 깔고, 가운데에 원본 가로 영상
+  // blur: [{ x, y, w, h, from, to }] 원본(1920x1080) 기준 좌표·클립 기준 초 → 자막/알림창 가리기
+  const inputs = ['-stream_loop', '-1', '-ss', String(s.clipStart ?? 0), '-i', resolve(root, s.clip)];
+  let fc = `[0:v]fps=${FPS},scale=1920:1080[src0]`;
+  for (const [k, b] of (s.blur ?? []).entries()) {
+    fc += `;[src${k}]split[m${k}][c${k}];[c${k}]crop=${b.w}:${b.h}:${b.x}:${b.y},boxblur=25:3[bb${k}];` +
+      `[m${k}][bb${k}]overlay=${b.x}:${b.y}:enable='between(t,${b.from},${b.to})'[src${k + 1}]`;
   }
+  const src = `src${(s.blur ?? []).length}`;
+  fc += `;[${src}]split[a][b];[a]scale=-2:${H},crop=${W}:${H},boxblur=30:2,eq=brightness=-0.18[back];` +
+    `[b]scale=${W}:${BAND.h}[front];[back][front]overlay=0:${BAND.y}[v0]`;
+
   inputs.push('-loop', '1', '-i', `${tmp}/${n}_base.png`);
-  let fc = `${bg};[1:v]format=rgba,fade=in:st=0:d=0.2:alpha=1[base];[v0][base]overlay=0:0[v1]`;
+  fc += `;[1:v]format=rgba,fade=in:st=0:d=0.2:alpha=1[base];[v0][base]overlay=0:0[v1]`;
   let last = 'v1', idx = 2;
+  const sfx = SFX.whoosh && i > 0 ? [['whoosh', 0]] : [];
   // 자막: 줄마다 아래에서 통통 튀어 올라 살짝 넘쳤다가 제자리에 안착 (감쇠 진동)
   // 뒷줄이 앞줄 아래로 깔리도록 마지막 줄부터 합성
   for (const [k, l] of [...lines.entries()].reverse()) {
@@ -85,10 +96,33 @@ for (const [i, s] of scenes.entries()) {
     fc += `;[${idx}:v]format=rgba,fade=in:st=${st}:d=0.06:alpha=1[s${k}];` +
       `[${last}][s${k}]overlay=x=${l.x}:y='${l.y}+if(gte(t,${st}),110*exp(-7*${t})*cos(16*${t}),110)':eval=frame[l${k}]`;
     last = `l${k}`; idx++;
+    if (SFX.pop && k === 0) sfx.push(['pop', st]);
   }
+  // 마지막 장면: 초코색으로 페이드아웃 → 생생 엔드카드
+  if (end) {
+    const fo = +(dur - END_HOLD).toFixed(2);
+    inputs.push('-loop', '1', '-i', `${tmp}/${n}_end.png`);
+    fc += `;[${last}]fade=out:st=${fo}:d=0.7:color=0x2B1608[fo];[${idx}:v]format=rgba,fade=in:st=${fo + 0.5}:d=0.5:alpha=1[ec];` +
+      `[fo][ec]overlay=0:0:enable='gte(t,${fo})'[vend]`;
+    last = 'vend'; idx++;
+    if (SFX.end) sfx.push(['end', fo + 0.3]);
+  }
+
+  // 오디오: 음성(없으면 무음) + 효과음
   if (hasVoice) inputs.push('-i', voice);
   else inputs.push('-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo');
-  ff([...inputs, '-filter_complex', fc, '-map', `[${last}]`, '-map', `${idx}:a`, '-t', dur.toFixed(3),
+  let amix = `[${idx}:a]aresample=44100,aformat=channel_layouts=stereo,apad[a0]`;
+  const aIn = ['[a0]'];
+  for (const [k, [name, at]] of sfx.entries()) {
+    inputs.push('-i', SFX[name]);
+    const ms = Math.round(at * 1000);
+    amix += `;[${idx + 1 + k}:a]aresample=44100,aformat=channel_layouts=stereo,adelay=${ms}|${ms},volume=${SFX_VOL[name]}[x${k}]`;
+    aIn.push(`[x${k}]`);
+  }
+  amix += `;${aIn.join('')}amix=inputs=${aIn.length}:duration=first:normalize=0${end ? `,afade=out:st=${(dur - 0.6).toFixed(2)}:d=0.6` : ''}[aout]`;
+  fc += `;${amix}`;
+
+  ff([...inputs, '-filter_complex', fc, '-map', `[${last}]`, '-map', '[aout]', '-t', dur.toFixed(3),
     '-r', String(FPS), '-c:v', 'libx264', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '44100', '-ac', '2', out]);
   parts.push(out);
   console.log(`장면 ${n} (${s.type}) ${dur.toFixed(1)}초`);
