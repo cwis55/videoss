@@ -17,7 +17,8 @@ const ctx = {};
 vm.runInNewContext(readFileSync(`${root}/posts/${post}/reel.js`, 'utf8'), ctx);
 const out = `${root}/posts/${post}/reel/voice`;
 mkdirSync(out, { recursive: true });
-const voiceId = ctx.REEL.voice?.id ?? process.env.ELEVENLABS_VOICE_ID;
+const v = ctx.REEL.voice ?? {};
+const voiceId = v.id ?? process.env.ELEVENLABS_VOICE_ID;
 if (!voiceId) throw new Error('reel.js의 voice.id 나 ELEVENLABS_VOICE_ID 가 필요해요.');
 
 for (const [i, s] of ctx.REEL.scenes.entries()) {
@@ -28,8 +29,8 @@ for (const [i, s] of ctx.REEL.scenes.entries()) {
     headers: { ...(key && { 'xi-api-key': key }), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text,
-      model_id: process.env.ELEVENLABS_MODEL ?? 'eleven_multilingual_v2',
-      voice_settings: { stability: 0.35, similarity_boost: 0.75, style: 0.45 },
+      model_id: v.model ?? 'eleven_v4',
+      voice_settings: { stability: v.stability ?? 0.5, similarity_boost: v.similarity ?? 0.75, ...(v.style != null && { style: v.style }) },
     }),
   });
   if (!res.ok) throw new Error(`장면 ${i + 1} 음성 생성 실패 (${res.status}): ${await res.text()}`);
