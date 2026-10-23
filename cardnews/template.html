@@ -90,12 +90,12 @@ body { background: #222; font-family: 'Pretendard', sans-serif; color: var(--cho
 .yellow .foot .next { background: var(--choco); color: var(--jelly); }
 
 /* 마지막 CTA 카드 (예시3 너겟 이벤트 + 예시4 공유 문구) */
-.cta-wrap { position: absolute; left: 72px; right: 72px; top: 170px; z-index: 4; text-align: center; }
+.cta-wrap { position: absolute; left: 72px; right: 72px; top: 140px; bottom: 120px; z-index: 4; text-align: center; display: flex; flex-direction: column; justify-content: center; }
 .cta-wrap .lead { font-weight: 800; font-size: 46px; }
 .cta-wrap .headline { color: var(--choco); text-shadow: none; font-size: 96px; margin-top: 10px; }
 .cta-wrap .headline em { color: var(--deep); }
-.hero { width: 400px; margin: 30px auto 0; display: block; filter: drop-shadow(0 18px 24px rgba(242,92,5,.35)); }
-.follow { display: flex; align-items: center; gap: 24px; background: var(--white); border-radius: 999px; padding: 18px 18px 18px 18px; margin: 34px auto 0; text-align: left; box-shadow: 0 14px 0 rgba(43,22,8,.12); }
+.hero { width: 500px; margin: 30px auto 0; display: block; filter: drop-shadow(0 18px 24px rgba(242,92,5,.35)); }
+.follow { width: 100%; display: flex; align-items: center; gap: 24px; background: var(--white); border-radius: 999px; padding: 18px 18px 18px 18px; margin: 34px auto 0; text-align: left; box-shadow: 0 14px 0 rgba(43,22,8,.12); }
 .follow img { width: 104px; height: 104px; border-radius: 50%; }
 .follow .who { flex: 1; }
 .follow .who b { display: block; font-weight: 900; font-size: 42px; }
@@ -103,6 +103,8 @@ body { background: #222; font-family: 'Pretendard', sans-serif; color: var(--cho
 .follow .btn { font-weight: 900; font-size: 34px; color: var(--white); background: var(--deep); border-radius: 999px; padding: 22px 40px; }
 .event { margin-top: 30px; background: var(--choco); color: var(--white); border-radius: 30px; padding: 26px 34px; text-align: left; font-size: 30px; line-height: 1.5; font-weight: 500; }
 .event b { color: var(--jelly); font-weight: 900; font-size: 34px; display: block; margin-bottom: 6px; }
+.acts { display: flex; justify-content: center; gap: 18px; margin-top: 40px; }
+.acts span { font-weight: 800; font-size: 32px; background: rgba(255,255,255,.55); border-radius: 999px; padding: 14px 28px; }
 .cta .foot { justify-content: center; }
 .cta .foot .handle { color: rgba(43,22,8,.6); }
 </style>
@@ -148,8 +150,7 @@ const CARDS = [
 
   { type: 'cta',
     lead: '슬라임 좋아하는 친구에게',
-    headline: '*이 게임* 보내줘!',
-    event: { title: '🎁 팔로워 이벤트', text: '생생 팔로우 + 같이 할 친구 태그하면\n추첨으로 스팀 키를 드려요 (~10.31)' } },
+    headline: '*이 게임* 보내줘!' },
 ];
 </script>
 
@@ -205,6 +206,7 @@ const R = {
     <div class="cta-wrap"><p class="lead">${esc(c.lead)}</p><h2 class="headline">${rich(c.headline)}</h2>
       <img class="hero" src="assets/mascot.png">
       <div class="follow"><img src="assets/profile.png"><div class="who"><b>${BRAND.handle}</b><span>${BRAND.name} · ${BRAND.bio}</span></div><span class="btn">팔로우</span></div>
+      <div class="acts"><span>📌 저장</span><span>✈️ 공유</span><span>💬 댓글</span></div>
       ${c.event ? `<div class="event"><b>${esc(c.event.title)}</b>${rich(c.event.text)}</div>` : ''}</div>${foot(n)}`,
 };
 const CLASS = { cover: 'cover', game: 'game', point: 'point', check: 'yellow', cta: 'yellow cta' };
