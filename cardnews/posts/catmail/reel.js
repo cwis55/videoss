@@ -5,8 +5,8 @@
 const C = 'posts/catmail/reel/clips/';
 
 REEL = {
-  // TTS 목소리 (ElevenLabs JY - 밝은 브이로그 톤) + 귀엽게 가공: pitch 피치 배율, speed 말 속도 배율
-  voice: { id: 'bQlkYuipD5BHEhntA5iz', pitch: 1.07, speed: 1.06 },
+  // TTS 목소리 (ElevenLabs My Voices의 'You') / pitch 피치 배율, speed 말 속도 배율 (1 = 원본)
+  voice: { id: 'aQ59Cs9Kd2zyFv9M0I6Z', pitch: 1, speed: 1 },
   scenes: [
     { type: 'hook', clip: C + 'hook.mp4', dur: 3.6,
       eyebrow: '📦 1~4인 힐링 협동 게임',
@@ -18,7 +18,7 @@ REEL = {
       headline: '냥냥 우체국\n*Cat Mail Co.*',
       chips: ['1~4인 협동', '힐링 경영'],
       price: { sale: '11,000원' },
-      say: '이름은 냥냥 우체국, 가격은 만 천 원!' },
+      say: '이름은, 냥냥 우체국! 가격은 만 천 원!' },
 
     { type: 'point', clip: C + 'xray.mp4', dur: 3.4,
       eyebrow: 'POINT 1 · 손맛',

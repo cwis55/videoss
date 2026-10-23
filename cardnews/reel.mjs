@@ -78,7 +78,10 @@ for (const [i, s] of scenes.entries()) {
   // 배경: 같은 영상을 흐리게 깔고, 가운데에 원본 가로 영상
   // blur: [{ x, y, w, h, from, to }] 원본(1920x1080) 기준 좌표·클립 기준 초 → 자막/알림창 가리기
   const inputs = ['-stream_loop', '-1', '-ss', String(s.clipStart ?? 0), '-i', resolve(root, s.clip)];
-  let fc = `[0:v]fps=${FPS},scale=1920:1080[src0]`;
+  // 클립이 장면보다 짧으면 되감기 대신 살짝 느리게 재생해서 길이를 맞춤
+  const avail = probe(resolve(root, s.clip)) - (s.clipStart ?? 0);
+  const slow = dur > avail ? `setpts=PTS*${(dur / avail + 0.01).toFixed(3)},` : '';
+  let fc = `[0:v]${slow}fps=${FPS},scale=1920:1080[src0]`;
   for (const [k, b] of (s.blur ?? []).entries()) {
     fc += `;[src${k}]split[m${k}][c${k}];[c${k}]crop=${b.w}:${b.h}:${b.x}:${b.y},boxblur=25:3[bb${k}];` +
       `[m${k}][bb${k}]overlay=${b.x}:${b.y}:enable='between(t,${b.from},${b.to})'[src${k + 1}]`;

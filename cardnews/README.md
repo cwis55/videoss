@@ -52,7 +52,7 @@ node reel.mjs catmail      # posts/catmail/reel.js → posts/catmail/reel/out/re
 ### TTS (ElevenLabs)
 
 ```bash
-ELEVENLABS_API_KEY=... ELEVENLABS_VOICE_ID=... node tts.mjs catmail   # reel/voice/01.mp3 ...
+NODE_USE_ENV_PROXY=1 node tts.mjs catmail   # reel.js의 voice.id 목소리로 reel/voice/01.mp3 ... 생성
 node reel.mjs catmail      # 음성이 있으면 장면 길이를 음성에 맞추고 음성을 넣음
 ```
 장면의 `say`(없으면 `sub`)를 읽습니다. 음악은 들어가지 않으니 인스타에서 붙여 주세요.
