@@ -3,7 +3,7 @@ const P = 'posts/lightup/';
 
 CARDS = [
   { type: 'cover', bg: P + 'images/cover_poster.jpg', video: P + 'clips/cover.mp4',
-    eyebrow: '🎄 크리스마스 꾸미기 게임',
+    eyebrow: '🎁 체험판 무료 · 힐링 꾸미기',
     headline: '크리스마스 분위기\n*제대로*인 게임',
     bubble: '넘겨봐!' },
 
