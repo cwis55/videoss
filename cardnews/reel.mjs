@@ -16,7 +16,9 @@ mkdirSync(tmp, { recursive: true });
 
 const W = 1080, H = 1920, FPS = 30;
 const BAND = { y: 690, h: 608 };     // reel.html의 영상 자리와 같아야 함
-const SUB_DELAY = 0.15;              // 자막 첫 줄이 튀어 오르기 시작하는 시점
+const SUB_DELAY = 0.08;              // 자막 첫 줄이 튀어 오르기 시작하는 시점
+const TAIL = 0.15;                   // 대사가 끝난 뒤 다음 장면까지 쉬는 시간
+const PUNCH = 0.08;                  // 장면 시작 펀치 줌 크기 (0.3초 동안 1.08배 → 1배)
 const LINE_GAP = 0.14;               // 다음 줄이 따라 오르는 간격
 
 const ff = args => { if (process.env.DEBUG) console.log(['ffmpeg', ...args].map(a => JSON.stringify(a)).join(' ')); return execFileSync('ffmpeg', ['-v', 'error', '-y', ...args]); };
@@ -63,7 +65,7 @@ await browser.close();
 // 효과음 (assets/sfx/에 파일이 있을 때만): whoosh=장면 전환, pop=장면마다 자막 첫 줄, end=엔드카드
 const SFX_VOL = { whoosh: 0.4, pop: 0.35, end: 1.0 };
 const SFX = Object.fromEntries(['whoosh', 'pop', 'end'].map(k => [k, `${root}/assets/sfx/${k}.mp3`]).filter(([, f]) => existsSync(f)));
-const END_HOLD = 2.3;                // 엔드카드가 보이는 시간
+const END_HOLD = 1.8;                // 엔드카드가 보이는 시간
 
 // 2) 장면별 영상 만들기
 const parts = [];
@@ -72,7 +74,10 @@ for (const [i, s] of scenes.entries()) {
   if (!s.clip) throw new Error(`장면 ${n}: clip(영상)을 넣어주세요.`);
   const voice = `${dir}/voice/${n}.mp3`;
   const hasVoice = existsSync(voice);
-  const dur = (hasVoice ? probe(voice) / (PITCH * SPEED) + 0.45 : s.dur) + (end ? END_HOLD : 0);
+  // 음성: 앞뒤 무음을 잘라내고 피치·속도 가공까지 한 wav로 만든 뒤 그 길이에 장면을 맞춤
+  const vwav = `${tmp}/${n}_voice.wav`;
+  if (hasVoice) ff(['-i', voice, '-af', `aresample=44100,silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,${voiceFx}`, vwav]);
+  const dur = (hasVoice ? probe(vwav) + TAIL : s.dur) + (end ? END_HOLD : 0);
   const out = `${tmp}/${n}.mp4`;
 
   // 배경: 같은 영상을 흐리게 깔고, 가운데에 원본 가로 영상
@@ -88,7 +93,7 @@ for (const [i, s] of scenes.entries()) {
   }
   const src = `src${(s.blur ?? []).length}`;
   fc += `;[${src}]split[a][b];[a]scale=-2:${H},crop=${W}:${H},boxblur=30:2,eq=brightness=-0.18[back];` +
-    `[b]scale=${W}:${BAND.h}[front];[back][front]overlay=0:${BAND.y}[v0]`;
+    `[b]zoompan=z='1+${PUNCH}*max(0,1-it/0.3)':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=${W}x${BAND.h}:fps=${FPS}[front];[back][front]overlay=0:${BAND.y}[v0]`;
 
   inputs.push('-loop', '1', '-i', `${tmp}/${n}_base.png`);
   fc += `;[1:v]format=rgba,fade=in:st=0:d=0.2:alpha=1[base];[v0][base]overlay=0:0[v1]`;
@@ -116,8 +121,8 @@ for (const [i, s] of scenes.entries()) {
 
   // 오디오: 음성(없으면 무음) + 효과음을 먼저 wav로 따로 만든 뒤 영상에 붙임
   // (영상과 한 번에 합성하면 ffmpeg가 서로 기다리다 멈춤)
-  const ain = hasVoice ? ['-i', voice] : ['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo'];
-  let amix = `[0:a]aresample=44100,${hasVoice ? `${voiceFx},adelay=120|120,` : ''}aformat=channel_layouts=stereo,apad[a0]`;
+  const ain = hasVoice ? ['-i', vwav] : ['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo'];
+  let amix = `[0:a]aresample=44100,${hasVoice ? 'adelay=30|30,' : ''}aformat=channel_layouts=stereo,apad[a0]`;
   const aIn = ['[a0]'];
   for (const [k, [name, at]] of sfx.entries()) {
     ain.push('-i', SFX[name]);
