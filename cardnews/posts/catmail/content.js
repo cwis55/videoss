@@ -4,7 +4,7 @@ const P = 'posts/catmail/';
 CARDS = [
   { type: 'cover', bg: P + 'images/s1.jpg', video: P + 'clips/cover.mp4',
     eyebrow: '📦 1~4인 힐링 협동 게임',
-    headline: '고양이 되어서\n*우체국 알바* 함',
+    headline: '고양이가 되어서\n*우체국 알바* 함',
     bubble: '넘겨봐!' },
 
   { type: 'game', bg: P + 'images/s5.jpg',
@@ -35,7 +35,7 @@ CARDS = [
 
   { type: 'point', bg: P + 'images/s2.jpg',
     eyebrow: 'POINT 5 · 힐링',
-    headline: '시간 제한 0\n*실패 페널티 0*',
+    headline: '시간 제한 X\n*실패 페널티 X*',
     body: '성과 압박 없이, 내 속도대로\n천천히 정리하면 돼요.' },
 
   { type: 'check',
