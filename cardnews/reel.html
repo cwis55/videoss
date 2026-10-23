@@ -76,18 +76,17 @@ body.preview { background: #333; display: flex; flex-wrap: wrap; gap: 40px; padd
 const BRAND = { name: '생생', handle: '@saeng_mag', bio: '말랑하게 씹어먹는 게임 소식' };
 const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const rich = s => esc(s).replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
-const brand = `<div class="brand"><img src="assets/profile.png"><b>${BRAND.name}</b></div>`;
 const head = s => `<div class="head">${s.eyebrow ? `<span class="eyebrow">${esc(s.eyebrow)}</span>` : ''}<h1 class="headline">${rich(s.headline)}</h1></div>`;
 const sub = s => s.sub ? `<div class="sub">${s.sub.split('\n').map(l => `<div class="line"><span>${rich(l)}</span></div>`).join('')}</div>` : '';
 
 const R = {
-  hook: s => `${brand}${head(s)}<div class="band-frame"></div>
+  hook: s => `${head(s)}<div class="band-frame"></div>
     <div class="bubble">${esc(s.bubble || '끝까지 봐!')}</div><img class="sticker" src="assets/mascot.png">${sub(s)}`,
-  info: s => `${brand}${head(s)}<div class="band-frame"></div>
+  info: s => `${head(s)}<div class="band-frame"></div>
     <div class="info-card"><div class="chips">${s.chips.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
     <div class="price">${s.price.orig ? `<s>${s.price.orig}</s>` : ''}<strong>${s.price.sale}</strong>${s.price.off ? `<span class="off">${s.price.off}</span>` : ''}</div></div>`,
-  point: s => `${brand}${head(s)}<div class="band-frame"></div>${sub(s)}`,
-  outro: s => `${brand}<div class="head"><p class="lead">${esc(s.lead)}</p><h1 class="headline">${rich(s.headline)}</h1></div>
+  point: s => `${head(s)}<div class="band-frame"></div>${sub(s)}`,
+  outro: s => `<div class="head"><p class="lead">${esc(s.lead)}</p><h1 class="headline">${rich(s.headline)}</h1></div>
     <div class="band-frame"></div><img class="peek" src="assets/mascot.png">
     <div class="follow"><img src="assets/profile.png"><div class="who"><b>${BRAND.handle}</b><span>${BRAND.name} · ${BRAND.bio}</span></div><span class="btn">팔로우</span></div>
     <div class="endcard"><img src="assets/mascot.png"><b>${BRAND.name}</b><span>${BRAND.handle}</span></div>`,

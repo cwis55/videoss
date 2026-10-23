@@ -39,7 +39,7 @@ body:has(.overlay-only) { background: transparent; }
 .brand { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,.92); border-radius: 999px; padding: 8px 26px 8px 8px; }
 .brand img { width: 60px; height: 60px; border-radius: 50%; }
 .brand b { font-family: 'Jua'; font-weight: 400; font-size: 34px; color: var(--choco); }
-.page { font-weight: 800; font-size: 28px; color: var(--white); background: rgba(43,22,8,.55); border-radius: 999px; padding: 10px 22px; letter-spacing: .04em; }
+.page { margin-left: auto; font-weight: 800; font-size: 28px; color: var(--white); background: rgba(43,22,8,.55); border-radius: 999px; padding: 10px 22px; letter-spacing: .04em; }
 .page i { font-style: normal; color: var(--jelly); }
 
 /* 하단 텍스트 블록 */
@@ -192,7 +192,7 @@ const bg = (v, video) => video && !RENDER ? `<div class="bg"><video src="${video
 function build() {
 const total = CARDS.length;
 const pad = n => String(n).padStart(2, '0');
-const topBar = n => `<div class="top"><div class="brand"><img src="assets/profile.png"><b>${BRAND.name}</b></div><div class="page"><i>${pad(n)}</i> / ${pad(total)}</div></div>`;
+const topBar = n => `<div class="top"><div class="page"><i>${pad(n)}</i> / ${pad(total)}</div></div>`;
 const foot = (n, label = '넘겨보기 →') => `<div class="foot"><span class="handle">${BRAND.handle}</span>${n < total ? `<span class="next">${label}</span>` : ''}</div>`;
 
 const R = {
