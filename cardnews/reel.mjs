@@ -128,7 +128,7 @@ for (const [i, s] of scenes.entries()) {
     const st = +(SUB_DELAY + k * LINE_GAP).toFixed(2), t = `(t-${st})`;
     inputs.push('-loop', '1', '-i', l.png);
     fc += `;[${idx}:v]format=rgba,fade=in:st=${st}:d=0.06:alpha=1[s${k}];` +
-      `[${last}][s${k}]overlay=x=${l.x}:y='${l.y}+if(gte(t,${st}),110*exp(-7*${t})*cos(16*${t}),110)':eval=frame[l${k}]`;
+      `[${last}][s${k}]overlay=x=${l.x}:y='${l.y}+if(gte(t,${st}),140*exp(-5.5*${t})*cos(15*${t}),140)':eval=frame[l${k}]`;
     last = `l${k}`; idx++;
     if (SFX.pop && k === 0) sfx.push(['pop', st]);
   }
