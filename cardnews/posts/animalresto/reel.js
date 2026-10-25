@@ -11,6 +11,7 @@ REEL = {
     { type: 'hook', clip: C + 'hook.mp4', dur: 3,
       headline: '동물의 숲 + 오버쿡\n*합친 게임* 나옴',
       bubble: '10/26 출시!',
+      sub: '동물의 숲이랑 오버쿡을 합친 게임이\n*10월 26일*에 나와요!',
       say: '동물의 숲이랑 오버쿡을 합친 게임이 시월 이십육일에 나와요!' },
 
     { type: 'info', clip: C + 'info.mp4', dur: 3,
