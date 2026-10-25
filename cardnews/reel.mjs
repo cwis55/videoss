@@ -39,6 +39,11 @@ const reel = await page.evaluate(() => REEL);
 const scenes = reel.scenes;
 const VOICE = { ...JSON.parse(readFileSync(`${root}/voice.json`, 'utf8')), ...reel.voice };
 const FULL = reel.layout === 'full';   // v2: 세로 전체 화면 영상
+// v2.1 'framed': 초코색 바탕 + 가운데 큰 영상(1080x900). srcCrop으로 원본에서 쓸 높이를 정해
+// 트레일러 아래 자막 같은 부분을 블러 대신 아예 잘라냄
+const FRAMED = reel.layout === 'framed';
+const FBAND = { y: 470, h: 900 };      // reel.html의 body.framed 영상 자리와 같아야 함
+const SRC = { y: 0, h: 1080, ...reel.srcCrop };
 // 음성 가공: 피치를 올리고(asetrate) 말 속도를 조절(atempo) → 길이는 pitch*speed 배로 줄어듦
 const PITCH = VOICE.pitch ?? 1, SPEED = VOICE.speed ?? 1;
 const voiceFx = `asetrate=44100*${PITCH},aresample=44100,atempo=${SPEED}`;
@@ -98,7 +103,12 @@ for (const [i, s] of scenes.entries()) {
       `[m${k}][bb${k}]overlay=${b.x}:${b.y}:enable='between(t,${b.from},${b.to})'[src${k + 1}]`;
   }
   const src = `src${blurs.length}`;
-  if (FULL) {
+  if (FRAMED) {
+    const cw = Math.round(SRC.h * W / FBAND.h), fx = s.fx ?? 0.5;
+    fc += `;[${src}]crop=${cw}:${SRC.h}:'(iw-${cw})*${fx}':${SRC.y},scale=${W}:${FBAND.h},` +
+      `zoompan=z='1+${PUNCH}*max(0,1-it/0.3)':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=${W}x${FBAND.h}:fps=${FPS}[front];` +
+      `color=c=0x2B1608:s=${W}x${H}:r=${FPS}[back];[back][front]overlay=0:${FBAND.y}:shortest=1[v0]`;
+  } else if (FULL) {
     // 세로 전체 화면: 높이를 1920에 맞추고 fx(0~1, 기본 0.5) 위치를 1080 폭으로 잘라냄 + 펀치 줌
     const fx = s.fx ?? 0.5;
     fc += `;[${src}]scale=-2:${H},crop=${W}:${H}:'(iw-${W})*${fx}':0,` +

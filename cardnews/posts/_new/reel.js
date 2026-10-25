@@ -1,17 +1,18 @@
-// 새 게시물 릴스 (v2) — 게임 영상 세로 전체 화면, 글자는 최소. 모든 장면은 영상(가로 1920x1080 clip).
+// 새 게시물 릴스 (v2.1) — 초코 바탕 + 가운데 큰 게임 영상(1080x900), 글자는 최소. 모든 장면은 영상(가로 1920x1080 clip).
 // 고정 순서: hook → info → point(3~4개) → outro. 15~20초 목표. 목소리·속도는 cardnews/voice.json
-// hook: 제목 + say(읽기만). point: 이모지 태그 + 자막(sub) 한 줄. fx: 세로로 자를 위치(0~1)
-// blur(전체): 트레일러에 박힌 자막 자리 [{ x, y, w, h }]  /  장면별 blur에는 from, to(초)도 지정
+// hook: 제목 + say(읽기만). point: 이모지 태그 + 자막(sub) 한 줄. fx: 가로로 자를 위치(0~1)
+// 날짜는 '내일' 말고 '10월 26일'처럼 실제 날짜로 (나중에 보는 사람도 있음)
+// srcCrop: 트레일러에 박힌 자막은 블러 말고 원본에서 그 아래를 잘라냄 { y: 0, h: 815 }
 const C = 'posts/_new/reel/clips/';
 
 REEL = {
-  layout: 'full',
+  layout: 'framed',
   endHold: 1.0,
-  blur: [],
+  // srcCrop: { y: 0, h: 815 },
   scenes: [
     { type: 'hook', clip: C + 'hook.mp4', dur: 3,
       headline: '짧은 후킹\n*강조 한 줄*',
-      bubble: '내일 출시!',
+      bubble: '10/26 출시!',
       say: '첫마디는 비교·궁금증·타이밍으로!' },
 
     { type: 'info', clip: C + 'info.mp4', dur: 3,

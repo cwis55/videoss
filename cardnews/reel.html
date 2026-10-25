@@ -83,6 +83,21 @@ body.full .sub { top: 1150px; }
 body.full .sub span { font-size: 60px; background: rgba(43,22,8,.86); }
 body.full .info-card, body.full .follow { top: 1150px; }
 body.full .peek { top: 460px; }
+
+/* ===== layout: 'framed' (v2.1) — 초코 바탕 + 가운데 큰 영상(y 470~1370), 글자 최소 ===== */
+body.framed.preview .scene { background: var(--choco); }
+body.framed.preview .scene::before { top: 470px; height: 900px; }
+body.framed .band-frame { top: 462px; height: 916px; }
+body.framed .head { top: 150px; height: 300px; }
+body.framed .headline { font-size: 100px; }
+body.framed .point .head { height: auto; top: 370px; }
+body.framed .sub { top: 1400px; left: 56px; right: 56px; }
+body.framed .sub span { font-size: 56px; }
+body.framed .info-card, body.framed .follow { top: 1400px; left: 56px; right: 56px; }
+body.framed .peek { top: 250px; }
+body.framed .hook .head { right: 380px; }
+body.framed .sticker { width: 240px; top: 200px; right: 24px; }
+body.framed .bubble { top: 150px; right: 150px; font-size: 40px; }
 </style>
 </head>
 <body>
@@ -108,7 +123,7 @@ const R = {
 
 function build() {
   if (!new URLSearchParams(location.search).has('render')) document.body.classList.add('preview');
-  if (REEL.layout === 'full') document.body.classList.add('full');
+  if (REEL.layout) document.body.classList.add(REEL.layout);
   document.body.insertAdjacentHTML('beforeend', REEL.scenes.map(s =>
     `<section class="scene ${s.type}">${R[s.type](s)}</section>`).join(''));
   // 제목이 칸보다 길어 줄이 넘치면 글자 크기를 줄여서 적어 둔 줄 수(\n)에 맞춤

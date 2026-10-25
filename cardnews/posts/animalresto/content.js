@@ -3,7 +3,7 @@ const P = 'posts/animalresto/';
 
 CARDS = [
   { type: 'cover', bg: P + 'images/cover_poster.jpg', video: P + 'clips/cover.mp4',
-    eyebrow: '🗓 내일(10/26) 출시 · 한국어 지원',
+    eyebrow: '🗓 10월 26일 출시 · 한국어 지원',
     headline: '동물의 숲 + 오버쿡\n*합친 게임* 나옴',
     bubble: '넘겨봐!' },
 
@@ -36,7 +36,7 @@ CARDS = [
     eyebrow: '📌 저장해두고 꺼내보기',
     headline: '이런 사람한테\n*딱* 맞아요',
     items: ['동물의 숲 감성 좋아하는 사람', '오버쿡처럼 친구랑 우당탕 하고 싶은 사람', '요리·경영 게임 좋아하는 사람', '할 게 많은 힐링 게임 찾는 중'],
-    tip: '내일 출시 전에 저장 꾹 👆' },
+    tip: '10월 26일 출시 전에 저장 꾹 👆' },
 
   { type: 'cta',
     lead: '같이 식당 차릴 친구에게',
