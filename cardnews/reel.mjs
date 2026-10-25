@@ -34,9 +34,11 @@ page.on('pageerror', e => { console.error('템플릿 오류:', e.message); proce
 await page.goto(url.href);
 await page.waitForSelector('.scene');
 await page.evaluate(() => document.fonts.ready);
+await page.waitForTimeout(100);   // 제목 글자 크기 자동 맞춤이 끝나도록
 const reel = await page.evaluate(() => REEL);
 const scenes = reel.scenes;
 const VOICE = { ...JSON.parse(readFileSync(`${root}/voice.json`, 'utf8')), ...reel.voice };
+const FULL = reel.layout === 'full';   // v2: 세로 전체 화면 영상
 // 음성 가공: 피치를 올리고(asetrate) 말 속도를 조절(atempo) → 길이는 pitch*speed 배로 줄어듦
 const PITCH = VOICE.pitch ?? 1, SPEED = VOICE.speed ?? 1;
 const voiceFx = `asetrate=44100*${PITCH},aresample=44100,atempo=${SPEED}`;
@@ -67,7 +69,7 @@ await browser.close();
 // 효과음 (assets/sfx/에 파일이 있을 때만): whoosh=장면 전환, pop=장면마다 자막 첫 줄, end=엔드카드
 const SFX_VOL = { whoosh: 0.4, pop: 0.35, end: 1.0 };
 const SFX = Object.fromEntries(['whoosh', 'pop', 'end'].map(k => [k, `${root}/assets/sfx/${k}.mp3`]).filter(([, f]) => existsSync(f)));
-const END_HOLD = 1.8;                // 엔드카드가 보이는 시간
+const END_HOLD = reel.endHold ?? 1.8;          // 엔드카드가 보이는 시간 (REEL.endHold로 바꿀 수 있음)
 
 // 2) 장면별 영상 만들기
 const parts = [];
@@ -89,13 +91,22 @@ for (const [i, s] of scenes.entries()) {
   const avail = probe(resolve(root, s.clip)) - (s.clipStart ?? 0);
   const slow = dur > avail ? `setpts=PTS*${(dur / avail + 0.01).toFixed(3)},` : '';
   let fc = `[0:v]${slow}fps=${FPS},scale=1920:1080[src0]`;
-  for (const [k, b] of (s.blur ?? []).entries()) {
+  // REEL.blur는 모든 장면에 항상 적용 (트레일러에 박힌 자막 등)
+  const blurs = [...(reel.blur ?? []), ...(s.blur ?? [])].map(b => ({ from: 0, to: 9999, ...b }));
+  for (const [k, b] of blurs.entries()) {
     fc += `;[src${k}]split[m${k}][c${k}];[c${k}]crop=${b.w}:${b.h}:${b.x}:${b.y},boxblur=25:3[bb${k}];` +
       `[m${k}][bb${k}]overlay=${b.x}:${b.y}:enable='between(t,${b.from},${b.to})'[src${k + 1}]`;
   }
-  const src = `src${(s.blur ?? []).length}`;
+  const src = `src${blurs.length}`;
+  if (FULL) {
+    // 세로 전체 화면: 높이를 1920에 맞추고 fx(0~1, 기본 0.5) 위치를 1080 폭으로 잘라냄 + 펀치 줌
+    const fx = s.fx ?? 0.5;
+    fc += `;[${src}]scale=-2:${H},crop=${W}:${H}:'(iw-${W})*${fx}':0,` +
+      `zoompan=z='1+${PUNCH}*max(0,1-it/0.3)':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=${W}x${H}:fps=${FPS}[v0]`;
+  } else {
   fc += `;[${src}]split[a][b];[a]scale=-2:${H},crop=${W}:${H},boxblur=30:2,eq=brightness=-0.18[back];` +
-    `[b]zoompan=z='1+${PUNCH}*max(0,1-it/0.3)':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=${W}x${BAND.h}:fps=${FPS}[front];[back][front]overlay=0:${BAND.y}[v0]`;
+      `[b]zoompan=z='1+${PUNCH}*max(0,1-it/0.3)':d=1:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':s=${W}x${BAND.h}:fps=${FPS}[front];[back][front]overlay=0:${BAND.y}[v0]`;
+  }
 
   inputs.push('-loop', '1', '-i', `${tmp}/${n}_base.png`);
   fc += `;[1:v]format=rgba,fade=in:st=0:d=0.2:alpha=1[base];[v0][base]overlay=0:0[v1]`;

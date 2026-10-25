@@ -203,7 +203,7 @@ const R = {
   game: (c, n) => `${bg(c.bg, c.video)}<div class="shade"></div>${topBar(n)}
     <div class="panel">${c.no ? `<div class="num">${c.no}</div>` : ''}<h2 class="title">${rich(c.title)}</h2>
       <div class="chips">${c.chips.map(t => `<span class="chip">${esc(t)}</span>`).join('')}${c.ok ? `<span class="chip ok">✓ ${esc(c.ok)}</span>` : ''}</div>
-      <div class="price">${c.price.orig ? `<s>${c.price.orig}</s>` : ''}<strong>${c.price.sale}</strong>${c.price.off ? `<span class="off">${c.price.off}</span>` : ''}</div>
+      ${c.price ? `<div class="price">${c.price.orig ? `<s>${c.price.orig}</s>` : ''}<strong>${c.price.sale}</strong>${c.price.off ? `<span class="off">${c.price.off}</span>` : ''}</div>` : ''}
       <p class="desc">${rich(c.desc)}</p></div>${foot(n)}`,
   point: (c, n) => `${bg(c.bg, c.video)}<div class="shade"></div>${topBar(n)}
     <div class="copy"><span class="eyebrow">${esc(c.eyebrow)}</span><h2 class="headline">${rich(c.headline)}</h2><p class="body">${rich(c.body)}</p></div>${foot(n)}`,

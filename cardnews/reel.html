@@ -49,6 +49,7 @@ body.preview { background: #333; display: flex; flex-wrap: wrap; gap: 40px; padd
 /* info: 영상 아래 정보 카드 */
 .info-card { position: absolute; left: 56px; right: 160px; top: 1330px; background: var(--cream); border-radius: 36px; padding: 34px 40px; box-shadow: 0 14px 0 rgba(0,0,0,.25); }
 .info-card .chips { display: flex; gap: 12px; flex-wrap: wrap; }
+.chip.big { font-size: 40px; font-weight: 900; padding: 10px 20px; background: var(--jelly); border: 0; }
 .chip { font-weight: 700; font-size: 30px; border-radius: 12px; padding: 8px 16px; background: var(--white); border: 2px solid rgba(43,22,8,.12); }
 .price { display: flex; align-items: center; gap: 18px; margin-top: 20px; }
 .price s { font-weight: 700; font-size: 38px; color: rgba(43,22,8,.4); }
@@ -69,6 +70,19 @@ body.preview { background: #333; display: flex; flex-wrap: wrap; gap: 40px; padd
 .endcard img { width: 480px; filter: drop-shadow(0 18px 30px rgba(255,138,0,.45)); }
 .endcard b { font-family: 'Jua'; font-weight: 400; font-size: 120px; color: var(--jelly); margin-top: 10px; }
 .endcard span { font-weight: 800; font-size: 40px; color: rgba(255,255,255,.75); margin-top: 4px; }
+
+/* ===== layout: 'full' (v2) — 게임 영상을 세로 전체 화면으로, 글자는 최소로 ===== */
+body.full .scene { background: linear-gradient(180deg, rgba(0,0,0,.5) 0, rgba(0,0,0,0) 24%, rgba(0,0,0,0) 52%, rgba(0,0,0,.6) 100%); }
+body.full.preview .scene::before { top: 0; height: 1920px; }
+body.full .band-frame { display: none; }
+body.full .head { top: 200px; height: 460px; }
+body.full .headline { font-size: 112px; text-shadow: 0 6px 30px rgba(0,0,0,.6), 0 0 4px rgba(0,0,0,.5); }
+body.full .point .headline { display: none; }            /* 포인트 장면은 태그 + 자막만 */
+body.full .point .head { height: auto; top: 230px; }
+body.full .sub { top: 1150px; }
+body.full .sub span { font-size: 60px; background: rgba(43,22,8,.86); }
+body.full .info-card, body.full .follow { top: 1150px; }
+body.full .peek { top: 460px; }
 </style>
 </head>
 <body>
@@ -76,15 +90,15 @@ body.preview { background: #333; display: flex; flex-wrap: wrap; gap: 40px; padd
 const BRAND = { name: '생생', handle: '@saeng_mag', bio: '말랑하게 씹어먹는 게임 소식' };
 const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const rich = s => esc(s).replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
-const head = s => `<div class="head">${s.eyebrow ? `<span class="eyebrow">${esc(s.eyebrow)}</span>` : ''}<h1 class="headline">${rich(s.headline)}</h1></div>`;
+const head = s => `<div class="head">${s.eyebrow ? `<span class="eyebrow">${esc(s.eyebrow)}</span>` : ''}${s.headline ? `<h1 class="headline">${rich(s.headline)}</h1>` : ''}</div>`;
 const sub = s => s.sub ? `<div class="sub">${s.sub.split('\n').map(l => `<div class="line"><span>${rich(l)}</span></div>`).join('')}</div>` : '';
 
 const R = {
   hook: s => `${head(s)}<div class="band-frame"></div>
     <div class="bubble">${esc(s.bubble || '끝까지 봐!')}</div><img class="sticker" src="assets/mascot.png">${sub(s)}`,
   info: s => `${head(s)}<div class="band-frame"></div>
-    <div class="info-card"><div class="chips">${s.chips.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
-    <div class="price">${s.price.orig ? `<s>${s.price.orig}</s>` : ''}<strong>${s.price.sale}</strong>${s.price.off ? `<span class="off">${s.price.off}</span>` : ''}</div></div>`,
+    <div class="info-card"><div class="chips">${s.chips.map((t, k) => `<span class="chip${k === 0 && !s.price ? ' big' : ''}">${esc(t)}</span>`).join('')}</div>
+    ${s.price ? `<div class="price">${s.price.orig ? `<s>${s.price.orig}</s>` : ''}<strong>${s.price.sale}</strong>${s.price.off ? `<span class="off">${s.price.off}</span>` : ''}</div>` : ''}</div>`,
   point: s => `${head(s)}<div class="band-frame"></div>${sub(s)}`,
   outro: s => `<div class="head"><p class="lead">${esc(s.lead)}</p><h1 class="headline">${rich(s.headline)}</h1></div>
     <div class="band-frame"></div><img class="peek" src="assets/mascot.png">
@@ -94,8 +108,15 @@ const R = {
 
 function build() {
   if (!new URLSearchParams(location.search).has('render')) document.body.classList.add('preview');
+  if (REEL.layout === 'full') document.body.classList.add('full');
   document.body.insertAdjacentHTML('beforeend', REEL.scenes.map(s =>
     `<section class="scene ${s.type}">${R[s.type](s)}</section>`).join(''));
+  // 제목이 칸보다 길어 줄이 넘치면 글자 크기를 줄여서 적어 둔 줄 수(\n)에 맞춤
+  document.fonts.ready.then(() => document.querySelectorAll('.headline').forEach(h => {
+    const lines = h.querySelectorAll('br').length + 1;
+    let size = parseFloat(getComputedStyle(h).fontSize);
+    while (h.getBoundingClientRect().height > lines * parseFloat(getComputedStyle(h).lineHeight) + 4 && size > 40) h.style.fontSize = `${size -= 3}px`;
+  }));
 }
 
 const post = new URLSearchParams(location.search).get('post');
